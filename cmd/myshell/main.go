@@ -18,6 +18,10 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		switch command {
+		case "exit 0\n":
+			os.Exit(0)
+		}
 		fmt.Printf("%s: command not found\n", strings.TrimSuffix(command, "\n"))
 	}
 }
