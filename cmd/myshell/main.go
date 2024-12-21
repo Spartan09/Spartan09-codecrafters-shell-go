@@ -16,12 +16,25 @@ func main() {
 
 		command, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		if err != nil {
-			panic(err)
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
-		switch command {
-		case "exit 0\n":
+
+		command = strings.TrimSuffix(command, "\n")
+		parts := strings.Fields(command)
+
+		if len(parts) == 0 {
+			continue
+		}
+
+		switch parts[0] {
+		case "exit":
 			os.Exit(0)
+		case "echo":
+			echo := strings.Join(parts[1:], " ")
+			fmt.Printf("%s\n", echo)
+		default:
+			fmt.Printf("%s: command not found\n", command)
 		}
-		fmt.Printf("%s: command not found\n", strings.TrimSuffix(command, "\n"))
 	}
 }
