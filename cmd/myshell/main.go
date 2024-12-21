@@ -7,10 +7,36 @@ import (
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
-var _ = fmt.Fprint
+type CommandHandler func(args []string)
+
+var commands map[string]CommandHandler
+
+func exitHandler(args []string) {
+	os.Exit(0)
+}
+
+func echoHandler(args []string) {
+	echo := strings.Join(args, " ")
+	fmt.Printf("%s\n", echo)
+}
+
+func typeHandler(args []string) {
+	if len(args) != 1 {
+		return
+	}
+	if _, exists := commands[args[0]]; exists {
+		fmt.Printf("%s is a shell builtin\n", args[0])
+	} else {
+		fmt.Printf("%s: not found\n", args[0])
+	}
+}
 
 func main() {
+	commands = map[string]CommandHandler{
+		"exit": exitHandler,
+		"echo": echoHandler,
+		"type": typeHandler,
+	}
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 
@@ -27,14 +53,10 @@ func main() {
 			continue
 		}
 
-		switch parts[0] {
-		case "exit":
-			os.Exit(0)
-		case "echo":
-			echo := strings.Join(parts[1:], " ")
-			fmt.Printf("%s\n", echo)
-		default:
-			fmt.Printf("%s: command not found\n", command)
+		if handler, exists := commands[parts[0]]; exists {
+			handler(parts[1:]) // Pass remaining args to handler
+		} else {
+			fmt.Printf("%s: command not found\n", parts[0])
 		}
 	}
 }
