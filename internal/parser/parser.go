@@ -27,6 +27,11 @@ func (p *ShellParser) Parse(input string) []string {
 				p.state = stateDoubleQuote
 			case ' ', '\t':
 				p.addArgument()
+			case '\\':
+				if i+1 < len(input) {
+					p.current.WriteByte(input[i+1])
+					i++
+				}
 			default:
 				p.current.WriteByte(ch)
 			}
@@ -42,6 +47,16 @@ func (p *ShellParser) Parse(input string) []string {
 			switch ch {
 			case '"':
 				p.state = stateNormal
+			case '\\':
+				if i+1 < len(input) {
+					next := input[i+1]
+					if next == '"' || next == '\\' {
+						p.current.WriteByte(next)
+						i++
+					} else {
+						p.current.WriteByte('\\')
+					}
+				}
 			default:
 				p.current.WriteByte(ch)
 			}
