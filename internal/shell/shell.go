@@ -31,6 +31,7 @@ func (s *Shell) registerBuiltins() {
 	s.Commands["exit"] = &builtin.ExitCommand{}
 	s.Commands["echo"] = &builtin.EchoCommand{}
 	s.Commands["type"] = &builtin.TypeCommand{Checker: s}
+	s.Commands["pwd"] = &builtin.PwdCommand{}
 }
 
 func (s *Shell) Run() error {
