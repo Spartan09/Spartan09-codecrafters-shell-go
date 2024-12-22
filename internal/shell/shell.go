@@ -6,6 +6,7 @@ import (
 	"github.com/codecrafters-io/shell-starter-go/internal/builtin"
 	"github.com/codecrafters-io/shell-starter-go/internal/command"
 	"github.com/codecrafters-io/shell-starter-go/internal/external"
+	"github.com/codecrafters-io/shell-starter-go/internal/parser"
 	"os"
 	"strings"
 )
@@ -53,11 +54,12 @@ func (s *Shell) Run() error {
 }
 
 func (s *Shell) Execute(input string) error {
-	parts := strings.Fields(strings.TrimSpace(input))
+	input = strings.TrimSuffix(input, "\n")
+	p := parser.NewParser()
+	parts := p.Parse(input)
 	if len(parts) == 0 {
 		return nil
 	}
-
 	cmd, exists := s.Commands[parts[0]]
 	if exists {
 		return cmd.Execute(parts[1:])
