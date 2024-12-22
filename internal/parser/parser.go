@@ -23,6 +23,8 @@ func (p *ShellParser) Parse(input string) []string {
 			switch ch {
 			case '\'':
 				p.state = stateSingleQuote
+			case '"':
+				p.state = stateDoubleQuote
 			case ' ', '\t':
 				p.addArgument()
 			default:
@@ -32,6 +34,13 @@ func (p *ShellParser) Parse(input string) []string {
 		case stateSingleQuote:
 			switch ch {
 			case '\'':
+				p.state = stateNormal
+			default:
+				p.current.WriteByte(ch)
+			}
+		case stateDoubleQuote:
+			switch ch {
+			case '"':
 				p.state = stateNormal
 			default:
 				p.current.WriteByte(ch)
