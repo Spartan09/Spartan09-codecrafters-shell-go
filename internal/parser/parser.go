@@ -15,7 +15,8 @@ func NewParser() *ShellParser {
 	}
 }
 
-func (p *ShellParser) Parse(input string) []string {
+func (p *ShellParser) Parse(input string) ([]string, string) {
+	var redirectFile string
 	for i := 0; i < len(input); i++ {
 		ch := input[i]
 		switch p.state {
@@ -32,6 +33,33 @@ func (p *ShellParser) Parse(input string) []string {
 					p.current.WriteByte(input[i+1])
 					i++
 				}
+
+			case '>':
+				// Add current argument (without the '1' if it exists)
+				str := p.current.String()
+				if i > 0 && input[i-1] == '1' && len(str) > 0 {
+					str = str[:len(str)-1] // Remove the '1'
+				}
+				p.current.Reset()
+				if str != "" {
+					p.args = append(p.args, str)
+				}
+
+				// Skip spaces after >
+				i++
+				for i < len(input) && (input[i] == ' ' || input[i] == '\t') {
+					i++
+				}
+
+				// Collect filename
+				start := i
+				for i < len(input) && input[i] != ' ' && input[i] != '\t' {
+					i++
+				}
+				redirectFile = input[start:i]
+				i-- // Back up one to handle next character properly
+				continue
+
 			default:
 				p.current.WriteByte(ch)
 			}
@@ -64,7 +92,7 @@ func (p *ShellParser) Parse(input string) []string {
 
 	}
 	p.addArgument()
-	return p.args
+	return p.args, redirectFile
 }
 
 func (p *ShellParser) addArgument() {

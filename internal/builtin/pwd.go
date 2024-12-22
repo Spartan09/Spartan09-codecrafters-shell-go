@@ -7,15 +7,22 @@ import (
 
 type PwdCommand struct{}
 
-func (p *PwdCommand) Execute(args []string) error {
-	pwd, err := os.Getwd()
+func (c *PwdCommand) Name() string { return "pwd" }
+func (c *PwdCommand) Execute(args []string, redirectFile string) error {
+	dir, err := os.Getwd()
 	if err != nil {
 		return err
 	}
-	fmt.Println(pwd)
-	return nil
-}
 
-func (p *PwdCommand) Name() string {
-	return "pwd"
+	if redirectFile != "" {
+		f, err := os.OpenFile(redirectFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		fmt.Fprintln(f, dir)
+	} else {
+		fmt.Println(dir)
+	}
+	return nil
 }

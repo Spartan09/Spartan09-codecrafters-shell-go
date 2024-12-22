@@ -8,7 +8,7 @@ import (
 
 type CdCommand struct{}
 
-func (c CdCommand) Execute(args []string) error {
+func (c CdCommand) Execute(args []string, redirectFile string) error {
 	if len(args) == 0 {
 		return nil
 	}
