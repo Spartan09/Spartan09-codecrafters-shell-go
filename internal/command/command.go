@@ -1,8 +1,10 @@
 package command
 
+import "github.com/codecrafters-io/shell-starter-go/internal/parser"
+
 type Command interface {
 	Name() string
-	Execute(args []string, redirectFile string) error
+	Execute(args []string, redirect *parser.RedirectInfo) error
 }
 
 type BuiltinChecker interface {

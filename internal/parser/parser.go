@@ -2,6 +2,12 @@ package parser
 
 import "strings"
 
+type RedirectInfo struct {
+	StdoutFile string
+	StderrFile string
+	IsAppend   bool
+}
+
 type ShellParser struct {
 	state   state
 	current strings.Builder
@@ -15,8 +21,9 @@ func NewParser() *ShellParser {
 	}
 }
 
-func (p *ShellParser) Parse(input string) ([]string, string) {
-	var redirectFile string
+func (p *ShellParser) Parse(input string) ([]string, *RedirectInfo) {
+	redirect := &RedirectInfo{}
+
 	for i := 0; i < len(input); i++ {
 		ch := input[i]
 		switch p.state {
@@ -33,19 +40,41 @@ func (p *ShellParser) Parse(input string) ([]string, string) {
 					p.current.WriteByte(input[i+1])
 					i++
 				}
-
 			case '>':
-				// Add current argument (without the '1' if it exists)
-				str := p.current.String()
-				if i > 0 && input[i-1] == '1' && len(str) > 0 {
-					str = str[:len(str)-1] // Remove the '1'
-				}
-				p.current.Reset()
-				if str != "" {
-					p.args = append(p.args, str)
+				isStderr := false
+				// Check if it's '2>' or '1>' or just '>'
+				if i > 0 && input[i-1] == '2' {
+					isStderr = true
+					// Remove the '2' from current argument
+					str := p.current.String()
+					if len(str) > 0 {
+						str = str[:len(str)-1] // Remove the '2'
+						p.current.Reset()
+						if str != "" {
+							p.args = append(p.args, str)
+						}
+					}
+				} else if i > 0 && input[i-1] == '1' {
+					// Remove the '1' from current argument
+					str := p.current.String()
+					if len(str) > 0 {
+						str = str[:len(str)-1] // Remove the '1'
+						p.current.Reset()
+						if str != "" {
+							p.args = append(p.args, str)
+						}
+					}
+				} else {
+					p.addArgument()
 				}
 
-				// Skip spaces after >
+				// Handle >> case
+				if i+1 < len(input) && input[i+1] == '>' {
+					redirect.IsAppend = true
+					i++
+				}
+
+				// Skip spaces after > or >>
 				i++
 				for i < len(input) && (input[i] == ' ' || input[i] == '\t') {
 					i++
@@ -56,7 +85,11 @@ func (p *ShellParser) Parse(input string) ([]string, string) {
 				for i < len(input) && input[i] != ' ' && input[i] != '\t' {
 					i++
 				}
-				redirectFile = input[start:i]
+				if isStderr {
+					redirect.StderrFile = input[start:i]
+				} else {
+					redirect.StdoutFile = input[start:i]
+				}
 				i-- // Back up one to handle next character properly
 				continue
 
@@ -71,6 +104,7 @@ func (p *ShellParser) Parse(input string) ([]string, string) {
 			default:
 				p.current.WriteByte(ch)
 			}
+
 		case stateDoubleQuote:
 			switch ch {
 			case '"':
@@ -89,10 +123,10 @@ func (p *ShellParser) Parse(input string) ([]string, string) {
 				p.current.WriteByte(ch)
 			}
 		}
-
 	}
+
 	p.addArgument()
-	return p.args, redirectFile
+	return p.args, redirect
 }
 
 func (p *ShellParser) addArgument() {

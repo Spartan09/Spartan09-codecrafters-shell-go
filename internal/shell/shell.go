@@ -56,17 +56,17 @@ func (s *Shell) Run() error {
 func (s *Shell) Execute(input string) error {
 	input = strings.TrimSuffix(input, "\n")
 	p := parser.NewParser()
-	parts, redirectFile := p.Parse(input)
+	parts, redirect := p.Parse(input)
 	if len(parts) == 0 {
 		return nil
 	}
 
 	cmd, exists := s.Commands[parts[0]]
 	if exists {
-		return cmd.Execute(parts[1:], redirectFile)
+		return cmd.Execute(parts[1:], redirect)
 	}
 
-	if err := external.Execute(parts, redirectFile); err != nil {
+	if err := external.Execute(parts, redirect); err != nil {
 		return fmt.Errorf("%s", err)
 	}
 	return nil

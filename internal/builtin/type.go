@@ -3,6 +3,7 @@ package builtin
 import (
 	"fmt"
 	"github.com/codecrafters-io/shell-starter-go/internal/command"
+	"github.com/codecrafters-io/shell-starter-go/internal/parser"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +14,7 @@ type TypeCommand struct {
 }
 
 func (c *TypeCommand) Name() string { return "type" }
-func (c *TypeCommand) Execute(args []string, redirectFile string) error {
+func (c *TypeCommand) Execute(args []string, redirect *parser.RedirectInfo) error {
 	if len(args) != 1 {
 		return fmt.Errorf("type: incorrect number of arguments")
 	}
@@ -29,8 +30,14 @@ func (c *TypeCommand) Execute(args []string, redirectFile string) error {
 		output = result
 	}
 
-	if redirectFile != "" {
-		f, err := os.OpenFile(redirectFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if redirect != nil && redirect.StdoutFile != "" {
+		flags := os.O_CREATE | os.O_WRONLY
+		if redirect.IsAppend {
+			flags |= os.O_APPEND
+		} else {
+			flags |= os.O_TRUNC
+		}
+		f, err := os.OpenFile(redirect.StdoutFile, flags, 0644)
 		if err != nil {
 			return err
 		}

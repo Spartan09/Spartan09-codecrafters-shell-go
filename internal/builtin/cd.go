@@ -2,13 +2,15 @@ package builtin
 
 import (
 	"fmt"
+	"github.com/codecrafters-io/shell-starter-go/internal/parser"
 	"os"
 	"strings"
 )
 
 type CdCommand struct{}
 
-func (c CdCommand) Execute(args []string, redirectFile string) error {
+func (c *CdCommand) Execute(args []string, redirect *parser.RedirectInfo) error {
+	// CD implementation stays the same, just add redirect parameter
 	if len(args) == 0 {
 		return nil
 	}
@@ -31,6 +33,6 @@ func (c CdCommand) Execute(args []string, redirectFile string) error {
 	return nil
 }
 
-func (c CdCommand) Name() string {
+func (c *CdCommand) Name() string {
 	return "cd"
 }
